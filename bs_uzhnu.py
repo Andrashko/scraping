@@ -2,6 +2,7 @@ from json import dump
 from requests import get
 from bs4 import BeautifulSoup
 import re
+from sqlite3 import connect
 
 BASE_URL = "https://www.uzhnu.edu.ua"
 URL = f"{BASE_URL}/uk/cat/faculty"
@@ -15,6 +16,10 @@ page = get(URL)
 soup = BeautifulSoup(page.content,  "html.parser")
 
 faculties = []
+
+#робота з базою даних
+connection = connect("uzhnu.db")
+cursor = connection.cursor()
 
 with open("uzhnu.txt", "w", encoding="utf-8") as file:
     fac_list = soup.find(class_="departments_unfolded")
@@ -30,6 +35,27 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
             "departments": []
         }
 
+        for f in cursor.execute(
+            "SELECT id FROM faculties WHERE name=?",
+            [faculty["name"]]
+        ):
+            faculty["id"] = f[0]
+        
+        if not faculty.get("id"):
+            cursor.execute(
+                "INSERT INTO faculties (name, url) VALUES (?,?)",
+                [faculty["name"], faculty["url"]]
+            )
+            connection.commit()
+            for f in cursor.execute(
+                "SELECT id FROM faculties WHERE name=?",
+                [faculty["name"]]
+            ):
+                faculty["id"] = f[0]
+
+
+
+
         fac_page = get(link)
         fac_soup = BeautifulSoup(fac_page.content, "html.parser")
         dep_list = fac_soup.find(class_="departments")
@@ -44,6 +70,25 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
                 "staff": [] 
             }
             
+            for d in cursor.execute(
+                "SELECT id FROM departments WHERE name=?",
+                [department["name"]]
+            ):
+                department["id"] = d[0]
+        
+            if not department.get("id"):
+                cursor.execute(
+                    "INSERT INTO departments (name, url, faculty_id) VALUES (?,?,?)",
+                    [department["name"], department["url"], faculty["id"]]
+                )
+                connection.commit()
+                for d in cursor.execute(
+                    "SELECT id FROM departments WHERE name=?",
+                    [department["name"]]
+                ):
+                    department["id"] = d[0]
+
+
             staff_page = get(f"{dep_link}/staff")
             staff_soup = BeautifulSoup(staff_page.content,"html.parser")
             for staff_list in staff_soup.find_all("ol"):
@@ -67,6 +112,9 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
 
             faculty["departments"].append(department)
         faculties.append(faculty)
+
+   
+
 
 with open("uzhnu.json", "w", encoding="utf-8") as json_file:
     dump(faculties, json_file, ensure_ascii=False, indent=4)        
