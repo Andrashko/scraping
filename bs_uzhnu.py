@@ -1,9 +1,16 @@
 from json import dump
 from requests import get
 from bs4 import BeautifulSoup
+import re
 
 BASE_URL = "https://www.uzhnu.edu.ua"
 URL = f"{BASE_URL}/uk/cat/faculty"
+NAME_PATTERNS = [
+    r"[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}[а-яіїє]+",
+    r"[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}\.\s*[А-ЯІЇЄ]{1}\.",
+]
+
+
 page = get(URL)
 soup = BeautifulSoup(page.content,  "html.parser")
 
@@ -41,12 +48,22 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
             staff_soup = BeautifulSoup(staff_page.content,"html.parser")
             for staff_list in staff_soup.find_all("ol"):
                 for staff_li in staff_list.find_all("li"):
+                    staff = ""
                     staff_text = staff_li.find(text=True, recursive=False)
                     if not staff_text:
                         span = staff_li.find("span")
-                        staff_text = staff_li.find(text=True, recursive=False)
-                    department["staff"].append(staff_text)
-                    print(staff_text)
+                        staff_text = span.find(text=True, recursive=False)
+                    # тут ще потрібні інші костилі для деяких сторінок
+                    if not staff_text:
+                        continue
+                    for pattern in NAME_PATTERNS:
+                        res = re.search( pattern, staff_text)
+                        if res:
+                            staff = res.group(0)
+                            break
+                    if staff:
+                        department["staff"].append(staff)
+                        print(staff)
 
             faculty["departments"].append(department)
         faculties.append(faculty)
