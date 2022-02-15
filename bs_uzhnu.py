@@ -1,25 +1,20 @@
 from json import dump
+from django.db import connection
 from requests import get
 from bs4 import BeautifulSoup
-import re
+from re import search
 from sqlite3 import connect
 
 BASE_URL = "https://www.uzhnu.edu.ua"
 URL = f"{BASE_URL}/uk/cat/faculty"
-NAME_PATTERNS = [
-    r"[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}[а-яіїє]+",
-    r"[А-ЯІЇЄ]{1}[а-яіїє]+\s+[А-ЯІЇЄ]{1}\.\s*[А-ЯІЇЄ]{1}\.",
-]
-
+connection = connect("uzhnu.db")
+cursor = connection.cursor()
 
 page = get(URL)
 soup = BeautifulSoup(page.content,  "html.parser")
 
 faculties = []
 
-#робота з базою даних
-connection = connect("uzhnu.db")
-cursor = connection.cursor()
 
 with open("uzhnu.txt", "w", encoding="utf-8") as file:
     fac_list = soup.find(class_="departments_unfolded")
@@ -36,11 +31,11 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
         }
 
         for f in cursor.execute(
-            "SELECT id FROM faculties WHERE name=?",
-            [faculty["name"]]
+            "SELECT id FROM faculties WHERE name=? AND url=?",
+            [faculty["name"], faculty["url"]]
         ):
             faculty["id"] = f[0]
-        
+
         if not faculty.get("id"):
             cursor.execute(
                 "INSERT INTO faculties (name, url) VALUES (?,?)",
@@ -48,13 +43,10 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
             )
             connection.commit()
             for f in cursor.execute(
-                "SELECT id FROM faculties WHERE name=?",
-                [faculty["name"]]
+                "SELECT id FROM faculties WHERE name=? AND url=?",
+                [faculty["name"], faculty["url"]]
             ):
                 faculty["id"] = f[0]
-
-
-
 
         fac_page = get(link)
         fac_soup = BeautifulSoup(fac_page.content, "html.parser")
@@ -71,11 +63,11 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
             }
             
             for d in cursor.execute(
-                "SELECT id FROM departments WHERE name=?",
-                [department["name"]]
+                "SELECT id FROM departments WHERE name=? AND url=?",
+                [department["name"], department["url"]]
             ):
                 department["id"] = d[0]
-        
+
             if not department.get("id"):
                 cursor.execute(
                     "INSERT INTO departments (name, url, faculty_id) VALUES (?,?,?)",
@@ -83,17 +75,16 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
                 )
                 connection.commit()
                 for d in cursor.execute(
-                    "SELECT id FROM departments WHERE name=?",
-                    [department["name"]]
+                    "SELECT id FROM departments WHERE name=? AND url=?",
+                    [department["name"], department["url"]]
                 ):
                     department["id"] = d[0]
-
 
             staff_page = get(f"{dep_link}/staff")
             staff_soup = BeautifulSoup(staff_page.content,"html.parser")
             for staff_list in staff_soup.find_all("ol"):
                 for staff_li in staff_list.find_all("li"):
-                    staff = ""
+                    
                     staff_text = staff_li.find(text=True, recursive=False)
                     if not staff_text:
                         span = staff_li.find("span")
@@ -101,20 +92,41 @@ with open("uzhnu.txt", "w", encoding="utf-8") as file:
                     # тут ще потрібні інші костилі для деяких сторінок
                     if not staff_text:
                         continue
-                    for pattern in NAME_PATTERNS:
-                        res = re.search( pattern, staff_text)
-                        if res:
-                            staff = res.group(0)
-                            break
+                   
+                    res = search(
+                        r"[А-ЯІЇЄ][а-яіїє]+\s[А-ЯІЇЄ][а-яіїє]+\s[А-ЯІЇЄ][а-яіїє]+",
+                        staff_text
+                    )
+                    if not res:
+                        res = search(
+                            r"[А-ЯІЇЄ][а-яіїє]+\s[А-ЯІЇЄ]\.\s?[А-ЯІЇЄ]\.",
+                            staff_text
+                        )
+                    staff = ""
+                    if res:
+                        staff=res.group(0)
+
                     if staff:
                         department["staff"].append(staff)
                         print(staff)
+                    id=-1
+                    for s in cursor.execute(
+                        "SELECT id FROM staff WHERE name=?",
+                        [staff,]
+                    ):
+                        id=s[0]
+
+                    if id == -1:
+                        cursor.execute(
+                            "INSERT INTO staff (name, department_id) VALUES (?,?)",
+                            [staff, department["id"]]
+                        )
+                        connection.commit()
 
             faculty["departments"].append(department)
         faculties.append(faculty)
-
-   
-
+ 
+connection.close()
 
 with open("uzhnu.json", "w", encoding="utf-8") as json_file:
     dump(faculties, json_file, ensure_ascii=False, indent=4)        
