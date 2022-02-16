@@ -1,5 +1,4 @@
 from json import dump
-from django.db import connection
 from requests import get
 from bs4 import BeautifulSoup
 from re import search
