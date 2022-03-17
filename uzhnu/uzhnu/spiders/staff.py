@@ -1,4 +1,3 @@
-from unicodedata import name
 import scrapy
 from uzhnu.items import FacultyItem, DepartmetnItem
 
