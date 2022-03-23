@@ -51,8 +51,8 @@ ROBOTSTXT_OBEY = False
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-#    'dinamyc.middlewares.DinamycDownloaderMiddleware': 543,
-   'scrapy_selenium.SeleniumMiddleware': 900
+   'dinamyc.middlewares.SeleniumMiddleware': 543,
+#    'scrapy_selenium.SeleniumMiddleware': 900
 }
 
 # Enable or disable extensions
