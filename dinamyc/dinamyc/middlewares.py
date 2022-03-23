@@ -85,6 +85,8 @@ class SeleniumMiddleware:
         if not isinstance(request, SeleniumRequest):
             return None
 
+        self.wait=WebDriverWait(self.driver, request.wait_time)
+
         self.driver.get(request.url)
 
         for cookie_name, cookie_value in request.cookies.items():
@@ -99,10 +101,10 @@ class SeleniumMiddleware:
             self.driver.execute_script(request.script)
 
         if request.execute:
-            request.execute(self.driver)
+            request.execute(self.driver, self.wait)
 
         if request.wait_until:
-            WebDriverWait(self.driver, request.wait_time).until(
+            self.wait.until(
                 request.wait_until
             )
 
