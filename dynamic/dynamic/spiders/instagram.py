@@ -36,7 +36,9 @@ class InstagramSpider(scrapy.Spider):
         later_button = driver.find_element(By.XPATH, "//button[contains(text(),'Не зараз')]")
         later_button.click()
 
-    def parse(self, response, **kwargs):
+    def parse(self, response):
         for img in response.css("li img"):
-            yield DynamicItem(url=img.css('::attr(src)').get())
-    
+            yield DynamicItem(
+                file_urls=[img.css('::attr(src)').get()],
+            )
+ 

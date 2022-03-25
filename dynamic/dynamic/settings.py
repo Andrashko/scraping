@@ -63,9 +63,11 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'dynamic.pipelines.dynamicPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'scrapy.pipelines.files.FilesPipeline': 100,
+   'scrapy.pipelines.images.ImagesPipeline': 150,
+   'dynamic.pipelines.DynamicPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -92,3 +94,6 @@ DOWNLOADER_MIDDLEWARES = {
 SELENIUM_DRIVER_NAME = 'chrome'
 SELENIUM_DRIVER_EXECUTABLE_PATH = 'chromedriver.exe'
 SELENIUM_DRIVER_ARGUMENTS = [] 
+
+IMAGES_STORE = './img'
+FILES_STORE = './file'
