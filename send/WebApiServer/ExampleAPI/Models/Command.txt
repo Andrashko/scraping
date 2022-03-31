@@ -1,0 +1,1 @@
+﻿Scaffold-DbContext -Connection Name=ExampleDB Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -force
