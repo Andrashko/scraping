@@ -15,11 +15,12 @@ class LaptopSpider(scrapy.Spider):
                 img_url = "https://hotline.ua/"+img 
 
             if model != None and price != None:
-                laptop = LaptopItem()
-                laptop["model"] = model.strip()
-                laptop["price"] = float(price.replace("\xa0",""))
-                laptop["img_url"] = img_url
-                laptop["image_urls"] = [img_url]
+                laptop = LaptopItem(
+                    model = model.strip(),
+                    price = float(price.replace("\xa0","")),
+                    img_url = img_url,
+                    image_urls = [img_url]
+                )
                 yield laptop
            
         
