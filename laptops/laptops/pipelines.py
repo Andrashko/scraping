@@ -13,18 +13,22 @@ class LaptopsPipeline:
     def process_item(self, item, spider):
         return item
 
+
 class FilterPipeline:
     def process_item(self, item, spider):
-        if item["price"]<25000:
+        MAX_PRICE = 25000
+        if item["price"] < MAX_PRICE:
             return item
         else:
             raise DropItem(f"{item['model']} is too expancive")
 
+
 class CalculateUSDPricePipeline:
-    course = 31.60
     def process_item(self, item, spider):
-        item["priceUSD"] = item["price"] / self.course
+        COURSE = 31.60
+        item["priceUSD"] = item["price"] / COURSE
         return item
+
 
 class CalcVendorsPipline:
     def process_item(self, item, spider):
@@ -37,19 +41,18 @@ class CalcVendorsPipline:
 
     def open_spider(self, spider):
         self.vendors = {}
-        
+
     def close_spider(self, spider):
         print("="*200)
-        print (self.vendors)
+        print(self.vendors)
         print("="*200)
-
 
 
 class FilterUniquePipline:
     def open_spider(self, spider):
         self.unique_items = set()
-    
-    def process_item(self,item,spider):
+
+    def process_item(self, item, spider):
         if item["model"] in self.unique_items:
             raise DropItem("Not unique")
         else:
