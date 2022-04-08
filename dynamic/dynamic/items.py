@@ -11,3 +11,4 @@ class DynamicItem(scrapy.Item):
     # name = scrapy.Field()
     url = scrapy.Field()
     file_urls = scrapy.Field()
+    image_urls = scrapy.Field()

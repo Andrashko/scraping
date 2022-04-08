@@ -16,13 +16,15 @@ class LaptopsPipeline:
         return item
 
 
-class FilterPipeline:
+class FilterExpensivePipeline:
+    def open_spider(self, spider):
+        self.max_price = spider.max_price
+
     def process_item(self, item, spider):
-        MAX_PRICE = 30000
-        if item["price"] < MAX_PRICE:
+        if item["price"] < self.max_price:
             return item
         else:
-            raise DropItem(f"{item['model']} is too expancive")
+            raise DropItem(f"{item['model']} is too expensive")
 
 
 class CalculateUSDPricePipeline:
@@ -48,14 +50,13 @@ class CalcVendorsPipline:
         spider.logger.info(f"{'='*100}\n{self.vendors}\n{'='*100}")
 
 
-
 class FilterUniquePipline:
     def open_spider(self, spider):
         self.unique_items = set()
 
     def process_item(self, item, spider):
         if item["model"] in self.unique_items:
-            raise DropItem("Not unique")
+            raise DropItem(f"Not unique {item['model']}")
         else:
             self.unique_items.add(item["model"])
             return item
@@ -65,26 +66,27 @@ class SaveToDbPipline:
     def open_spider(self, spider):
         self.connection = connect("hotline.db")
         self.cursor = self.connection.cursor()
-    
+
     def process_item(self, item, spider):
         if isinstance(item, LaptopItem):
             for laptop in self.cursor.execute(
-                "SELECT id FROM laptops WHERE model=?",
+                "SELECT id, model FROM laptops WHERE model=?",
                 [item["model"]]
             ):
                 spider.logger.info(f"{item['model']} is in db, updating price")
                 self.cursor.execute(
                     "UPDATE laptops SET price=?, priceUSD=? WHERE id=?",
-                    [item["price"], item["priceUSD"], id[0]]
+                    [item["price"], item["priceUSD"], laptop[0]]
                 )
                 self.connection.commit()
                 return item
             self.cursor.execute(
                 "INSERT INTO laptops (model, price,  priceUSD, img_url, images) VALUES (?,?,?,?,?)",
-                    [item["model"], item["price"], item["priceUSD"], item["img_url"], item["images"][0]["path"]]
-                )  
-            self.connection.commit()  
-            return item
+                [item["model"], item["price"], item["priceUSD"],
+                    item["img_url"], item["images"][0]["path"]]
+            )
+            self.connection.commit()
+        return item
 
     def close_spider(self, spider):
         self.connection.close()

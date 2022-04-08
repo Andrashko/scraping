@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import scrapy
 from laptops.items import LaptopItem
 
@@ -5,6 +6,13 @@ from laptops.items import LaptopItem
 class LaptopSpider(scrapy.Spider):
     name = 'laptop'
     start_urls = ['https://hotline.ua/computer/noutbuki-netbuki/']
+    max_price = 30000
+
+    def __init__(self, name=None, **kwargs):
+        if kwargs.get("max_price"):
+            self.max_price = float(kwargs.get("max_price")) 
+        super().__init__(name)
+
 
     def parse(self, response):
         for product in response.css("li.product-item"):

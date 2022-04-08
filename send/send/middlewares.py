@@ -60,9 +60,6 @@ class SendSpiderMiddleware:
         # similarly to the process_spider_output() method, except
         # that it doesn’t have a response associated.        
         # Must return only requests (not items).
-        for r in start_requests:
-            yield r
-        
         yield JsonRequest( # надсилаємо JSON POST запит
                 url="https://localhost:44375/api/users/login", #на адресу сервера,
                 method="POST",
@@ -73,6 +70,10 @@ class SendSpiderMiddleware:
                 callback=spider.save_token # вказуєм обробник відповіді. Якщо нічого не вказати то обробку передасть в spider.parse
             )
 
+        for r in start_requests:
+            yield r
+        
+  
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 

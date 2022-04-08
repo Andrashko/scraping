@@ -65,8 +65,8 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    'scrapy.pipelines.files.FilesPipeline': 100,
-   'scrapy.pipelines.images.ImagesPipeline': 150,
-   'dynamic.pipelines.DynamicPipeline': 300,
+   'scrapy.pipelines.images.ImagesPipeline': 200,
+   # 'dynamic.pipelines.DynamicPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -97,3 +97,5 @@ SELENIUM_DRIVER_ARGUMENTS = []
 
 IMAGES_STORE = './img'
 FILES_STORE = './file'
+
+FEED_EXPORT_ENCODING = 'utf-8'

@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = 'laptops.spiders'
 #USER_AGENT = 'laptops (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -63,12 +63,12 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'scrapy.pipelines.images.ImagesPipeline': 50,
+   'laptops.pipelines.CalcVendorsPipline': 20,
    'laptops.pipelines.FilterUniquePipline': 100,
    'laptops.pipelines.LaptopsPipeline': 300,
    'laptops.pipelines.CalculateUSDPricePipeline': 350,
-   'laptops.pipelines.FilterPipeline': 400,
-   'laptops.pipelines.CalcVendorsPipline': 700,
+   'laptops.pipelines.FilterExpensivePipeline': 400,
+   'scrapy.pipelines.images.ImagesPipeline': 500,
    'laptops.pipelines.SaveToDbPipline':800
 }
 IMAGES_STORE = 'images'

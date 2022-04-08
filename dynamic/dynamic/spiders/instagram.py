@@ -3,9 +3,6 @@ from dynamic.SeleniumRequest import SeleniumRequest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions 
 from dynamic.items import DynamicItem
-from time import sleep
-
-from selenium.webdriver.support.ui import WebDriverWait
 
 class InstagramSpider(scrapy.Spider):
     name = "instagram"
@@ -16,16 +13,16 @@ class InstagramSpider(scrapy.Spider):
             yield SeleniumRequest(
                 url=url,
                 callback=self.parse,
-                wait_time=1000,
+                wait_time=10,
                 wait_until=expected_conditions.element_to_be_clickable(
-                   ( By.CSS_SELECTOR,
+                   (By.CSS_SELECTOR,
                     "li button")
                 ),
                 execute=self.login
             )
 
     def login(self, driver, wait):
-        wait.until(expected_conditions.element_to_be_clickable( (By.XPATH, '//input[@name="username"]')))
+        wait.until(expected_conditions.element_to_be_clickable((By.XPATH, '//input[@name="username"]')))
         username_input = driver.find_element(By.XPATH, '//input[@name="username"]')
         username_input.send_keys("UzhnuTest")
         username_password = driver.find_element(By.XPATH, '//input[@name="password"]')
@@ -38,7 +35,10 @@ class InstagramSpider(scrapy.Spider):
 
     def parse(self, response):
         for img in response.css("li img"):
+            url = img.css('::attr(src)').get()
             yield DynamicItem(
-                file_urls=[img.css('::attr(src)').get()],
+                url=url,
+                file_urls=[url],
+                image_urls=[url],
             )
  

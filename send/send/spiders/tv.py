@@ -10,7 +10,7 @@ from json import loads
 class TvSpider(scrapy.Spider):
     name = 'tv'
     start_urls = ['https://ek.ua/ua/list/160/']
-    token=""
+    token = ""
 
     def start_requests(self):
         for url in self.start_urls:
@@ -26,7 +26,7 @@ class TvSpider(scrapy.Spider):
             price_tables = goods.css('table.model-short-block tr')
             for shop in price_tables:
                 yield ShopItem(
-                    name = shop.xpath('.//td[@class="model-hot-prices-td"]//a//u/text()').get(),
+                    name = shop.xpath('.//td[@class="model-shop-name"]//a//u/text()').get(),
                     price = shop.xpath('.//td[@class="model-shop-price"]//a/text()').get()
                 )
 
