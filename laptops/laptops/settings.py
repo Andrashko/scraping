@@ -64,11 +64,12 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    'scrapy.pipelines.images.ImagesPipeline': 50,
-   # 'laptops.pipelines.FilterUniquePipline': 100,
-   # 'laptops.pipelines.LaptopsPipeline': 300,
-   # 'laptops.pipelines.CalculateUSDPricePipeline': 350,
-   # 'laptops.pipelines.FilterPipeline': 400,
-   # 'laptops.pipelines.CalcVendorsPipline': 700,
+   'laptops.pipelines.FilterUniquePipline': 100,
+   'laptops.pipelines.LaptopsPipeline': 300,
+   'laptops.pipelines.CalculateUSDPricePipeline': 350,
+   'laptops.pipelines.FilterPipeline': 400,
+   'laptops.pipelines.CalcVendorsPipline': 700,
+   'laptops.pipelines.SaveToDbPipline':800
 }
 IMAGES_STORE = 'images'
 MEDIA_ALLOW_REDIRECTS = True

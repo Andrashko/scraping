@@ -7,6 +7,8 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
+from sqlite3 import connect
+from laptops.items import LaptopItem
 
 
 class LaptopsPipeline:
@@ -16,7 +18,7 @@ class LaptopsPipeline:
 
 class FilterPipeline:
     def process_item(self, item, spider):
-        MAX_PRICE = 25000
+        MAX_PRICE = 30000
         if item["price"] < MAX_PRICE:
             return item
         else:
@@ -33,7 +35,7 @@ class CalculateUSDPricePipeline:
 class CalcVendorsPipline:
     def process_item(self, item, spider):
         vendor = item["model"].split()[0]
-        if self.vendors[vendor]:
+        if self.vendors.get(vendor):
             self.vendors[vendor] += 1
         else:
             self.vendors[vendor] = 1
@@ -43,9 +45,8 @@ class CalcVendorsPipline:
         self.vendors = {}
 
     def close_spider(self, spider):
-        print("="*200)
-        print(self.vendors)
-        print("="*200)
+        spider.logger.info(f"{'='*100}\n{self.vendors}\n{'='*100}")
+
 
 
 class FilterUniquePipline:
@@ -58,3 +59,32 @@ class FilterUniquePipline:
         else:
             self.unique_items.add(item["model"])
             return item
+
+
+class SaveToDbPipline:
+    def open_spider(self, spider):
+        self.connection = connect("hotline.db")
+        self.cursor = self.connection.cursor()
+    
+    def process_item(self, item, spider):
+        if isinstance(item, LaptopItem):
+            for laptop in self.cursor.execute(
+                "SELECT id FROM laptops WHERE model=?",
+                [item["model"]]
+            ):
+                spider.logger.info(f"{item['model']} is in db, updating price")
+                self.cursor.execute(
+                    "UPDATE laptops SET price=?, priceUSD=? WHERE id=?",
+                    [item["price"], item["priceUSD"], id[0]]
+                )
+                self.connection.commit()
+                return item
+            self.cursor.execute(
+                "INSERT INTO laptops (model, price,  priceUSD, img_url, images) VALUES (?,?,?,?,?)",
+                    [item["model"], item["price"], item["priceUSD"], item["img_url"], item["images"][0]["path"]]
+                )  
+            self.connection.commit()  
+            return item
+
+    def close_spider(self, spider):
+        self.connection.close()
